@@ -41,6 +41,7 @@ Now, let's load the data and try to answer some questions regarding the previous
 
 ```{r}
 unzip("activity.zip", list=TRUE)
+unzip("activity.zip")
 ```
 
 2. Now, let's load the file and set the right formats.
@@ -76,7 +77,8 @@ hist(tmp$sum, xlab = "number of steps", ylab="frequency", main="Number of steps 
 
 ```{r fig.width=11, fig.height=6}
 df.avg <- aggregate(clean.df$steps, by=list(clean.df$interval),  data = df, FUN = mean)
-plot(df.avg$Group.1, df.avg$x, type="l", xlab="5-minute interval", ylab="avg. no. of steps", main="5-minute Intervals and Average number of steps taken")
+plot(df.avg$Group.1, df.avg$x, type="l", xlab="5-minute interval", ylab="avg. no. of steps", 
+     main="5-minute Intervals and Average number of steps taken")
 ```
 
 2. Let's find out which interval, on average across all the days in the dataset, contains the maximum number of steps.

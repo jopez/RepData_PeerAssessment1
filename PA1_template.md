@@ -2,7 +2,7 @@
 
 ## Introduction
 
-It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the quantified self movement  a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the âquantified selfâ movement â a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
 
 This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
 
@@ -42,6 +42,10 @@ unzip("activity.zip", list=TRUE)
 ```
 ##           Name Length                Date
 ## 1 activity.csv 350829 2014-02-11 10:08:00
+```
+
+```r
+unzip("activity.zip")
 ```
 
 2. Now, let's load the file and set the right formats.
@@ -130,7 +134,7 @@ tmp <- ddply(clean.df, .(date), summarize, "sum"= sum(steps), .drop = TRUE)
 hist(tmp$sum, xlab = "number of steps", ylab="frequency", main="Number of steps per day", breaks=15)
 ```
 
-![plot of chunk unnamed-chunk-4](./project_files/figure-html/unnamed-chunk-4.png) 
+![plot of chunk unnamed-chunk-4](./PA1_template_files/figure-html/unnamed-chunk-4.png) 
 
 ## What is the average daily activity pattern?
 
@@ -139,10 +143,11 @@ hist(tmp$sum, xlab = "number of steps", ylab="frequency", main="Number of steps 
 
 ```r
 df.avg <- aggregate(clean.df$steps, by=list(clean.df$interval),  data = df, FUN = mean)
-plot(df.avg$Group.1, df.avg$x, type="l", xlab="5-minute interval", ylab="avg. no. of steps", main="5-minute Intervals and Average number of steps taken")
+plot(df.avg$Group.1, df.avg$x, type="l", xlab="5-minute interval", ylab="avg. no. of steps", 
+     main="5-minute Intervals and Average number of steps taken")
 ```
 
-![plot of chunk unnamed-chunk-5](./project_files/figure-html/unnamed-chunk-5.png) 
+![plot of chunk unnamed-chunk-5](./PA1_template_files/figure-html/unnamed-chunk-5.png) 
 
 2. Let's find out which interval, on average across all the days in the dataset, contains the maximum number of steps.
 Since each interval is of 5 minutes, let's find out what time of the day this interval corresponds to.
@@ -168,7 +173,7 @@ print(paste("Which corresponds to ", max%/%60, "hors and", max%%60, "minutes"))
 
 ## Imputing missing values
 
-1. Let's find out how many NAs values there are in the original data frame (`df`).
+1. Let's find out how many NAs values there are in the original data frame (remember, `clean.df` contains the values without NAs, and `df` contains all the original values).
 
 
 ```r
@@ -187,13 +192,6 @@ In the data frame `df.avg` we already have the average per interval across all d
 We just need to find all the `NA` values and replace them by the corresponding average calculated in the data frame `df.avg`.
 
 
-fix_missing <- function(x) {
-  print(x[2])
-}
-
-apply(df,2,fix_missing)
-
-
 ```r
 for(i in 1:nrow(df)) {
     if (is.na(df[i,1]) == TRUE) {
@@ -202,7 +200,7 @@ for(i in 1:nrow(df)) {
 }
 ```
 
-3. Now, let's make a histogram of these new values.
+3. Now, let's make a histogram with these new values.
 
 
 
@@ -211,9 +209,9 @@ tmp2 <- ddply(df, .(date), summarize, "sum"= sum(steps), .drop = TRUE)
 hist(tmp2$sum, xlab = "number of steps", ylab="frequency", main="Number of steps per day", breaks=15)
 ```
 
-![plot of chunk unnamed-chunk-9](./project_files/figure-html/unnamed-chunk-9.png) 
+![plot of chunk unnamed-chunk-9](./PA1_template_files/figure-html/unnamed-chunk-9.png) 
 
-4. Now let's calculate the mean and the median for the total number of steps taken per day.
+4. Now let's calculate the mean and the median for the total number of steps taken per day, again using the data frame where the `NA` values were replaced by its respective mean.
 
 
 ```r
@@ -285,7 +283,8 @@ ddply(df, .(date), summarize, "mean"= mean(steps), "median" = median(steps), .dr
 ## 61 2012-11-30 37.3826  34.11
 ```
 
-Clearly, after we replaced the missing values with the mean of the 5-minutes interval, the mean, median, and the histogram are  not the same. You can think of it as if before the NAs values contributed with 0 to the computation of the mean and the media, but now they contribute with a greater value.
+Clearly, after we replaced the missing values with the mean of the 5-minutes interval, the mean, median, and the histogram are  not the same. 
+This is because before, with the cleaned values, the `NA` values were not taken into account. However, all those values are now replaced by its respective mean, and thus **the total daily number of steps increases**.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -307,6 +306,6 @@ qplot(Group.1, x, data=df.avg2, facets = Group.2~., geom = "line",
       main = "Average Number of Steps per 5-minute Interval");
 ```
 
-![plot of chunk unnamed-chunk-12](./project_files/figure-html/unnamed-chunk-12.png) 
+![plot of chunk unnamed-chunk-12](./PA1_template_files/figure-html/unnamed-chunk-12.png) 
 
 
