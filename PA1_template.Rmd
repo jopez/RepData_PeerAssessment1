@@ -5,21 +5,148 @@ output:
     keep_md: true
 ---
 
+## Introduction
+
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the “quantified self” movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+## Data
+
+The data for this assignment can be downloaded from the course web site:
+
+- *Dataset*: [Activity monitoring data]("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip") [52K]
+
+The variables included in this dataset are:
+
+- *steps*: Number of steps taking in a 5-minute interval (missing values are coded as NA)
+
+- *date*: The date on which the measurement was taken in YYYY-MM-DD format
+
+- *interval*: Identifier for the 5-minute interval in which measurement was taken
+
+The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.
+
+-----
+
+# The Project
+
+Now, let's load the data and try to answer some questions regarding the previously referred data. 
+
+## 
 
 ## Loading and preprocessing the data
 
+1. First, let's unzip the file and list the files.
 
+```{r}
+unzip("activity.zip", list=TRUE)
+```
+
+2. Now, let's load the file and set the right formats.
+
+```{r}
+df <- read.csv("activity.csv", header = TRUE)
+df$date <- as.Date(df$date)
+```
 
 ## What is mean total number of steps taken per day?
 
+1. There are several ways of computing the mean per day.
+We can use the `ddply` function of the `plyr` package. 
 
+```{r}
+library(plyr)
+# as asked for this question, we omit NAs first
+clean.df <- na.omit(df)
+ddply(clean.df, .(date), summarize, "mean"= mean(steps), "median" = median(steps), .drop = TRUE)
+```
+
+2. Now let's see a histogram to better analyze the information about the total number of steps per day.
+
+```{r fig.width=11, fig.height=7}
+tmp <- ddply(clean.df, .(date), summarize, "sum"= sum(steps), .drop = TRUE)
+hist(tmp$sum, xlab = "number of steps", ylab="frequency", main="Number of steps per day", breaks=15)
+
+```
 
 ## What is the average daily activity pattern?
 
+1. Let's makek a plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).
+
+```{r fig.width=11, fig.height=6}
+df.avg <- aggregate(clean.df$steps, by=list(clean.df$interval),  data = df, FUN = mean)
+plot(df.avg$Group.1, df.avg$x, type="l", xlab="5-minute interval", ylab="avg. no. of steps", main="5-minute Intervals and Average number of steps taken")
+```
+
+2. Let's find out which interval, on average across all the days in the dataset, contains the maximum number of steps.
+Since each interval is of 5 minutes, let's find out what time of the day this interval corresponds to.
+
+```{r}
+max <- df.avg$Group.1[df.avg$x==max(df.avg$x)]
+max
+
+print(paste("Which corresponds to ", max%/%60, "hors and", max%%60, "minutes"))
+```
 
 
 ## Imputing missing values
 
+1. Let's find out how many NAs values there are in the original data frame (remember, `clean.df` contains the values without NAs, and `df` contains all the original values).
 
+```{r}
+length(df[is.na(df)])
+```
+
+2. Since there are some missing values, let's assign the mean of each 5-minute interval as a default value for those missing values.
+
+We will create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+In the data frame `df.avg` we already have the average per interval across all days.
+We just need to find all the `NA` values and replace them by the corresponding average calculated in the data frame `df.avg`.
+
+```{r}
+for(i in 1:nrow(df)) {
+    if (is.na(df[i,1]) == TRUE) {
+      df[i,1] <- df.avg[df.avg$Group.1 == df[i,3],2]
+    }
+}
+```
+
+3. Now, let's make a histogram with these new values.
+
+
+```{r fig.width=11, fig.height=7}
+tmp2 <- ddply(df, .(date), summarize, "sum"= sum(steps), .drop = TRUE)
+hist(tmp2$sum, xlab = "number of steps", ylab="frequency", main="Number of steps per day", breaks=15)
+
+```
+
+4. Now let's calculate the mean and the median for the total number of steps taken per day, again using the data frame where the `NA` values were replaced by its respective mean.
+
+```{r}
+ddply(df, .(date), summarize, "mean"= mean(steps), "median" = median(steps), .drop = TRUE)
+```
+
+Clearly, after we replaced the missing values with the mean of the 5-minutes interval, the mean, median, and the histogram are  not the same. 
+This is because before, with the cleaned values, the `NA` values were not taken into account. However, all those values are now replaced by its respective mean, and thus **the total daily number of steps increases**.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1. First, let's create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+
+```{r}
+df$tday <- as.factor(ifelse(weekdays( df$date) %in% c("Saturday","Sunday"), "Weekend", "Weekday"))
+```
+
+2. Now, let's make a panel plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
+
+```{r fig.width=11, fig.height=9}
+df.avg2 <- aggregate(df$steps, by=list(df$interval,df$tday),  data = df, FUN = mean)
+library(ggplot2);
+qplot(Group.1, x, data=df.avg2, facets = Group.2~., geom = "line",
+      xlab = "interval", ylab = "number of steps", 
+      main = "Average Number of Steps per 5-minute Interval");
+```
+
+
